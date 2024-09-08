@@ -44,7 +44,7 @@ export class TestService {
         testId,
       });
       if (testSession?.isTestCompleted) {
-        throw new BadRequestException('Test has already completed');
+        throw new BadRequestException('Test has already been completed');
       }
       if (testSession) {
         throw new BadRequestException('Test has already started');
@@ -89,7 +89,9 @@ export class TestService {
     if (!testSession) {
       throw new NotFoundException('Test session not found');
     }
-
+    if (testSession.isTestCompleted) {
+      throw new BadRequestException('Test has already been completed');
+    }
     const isAlreadySubmitted = testSession.answers?.some(
       (ans) => String(ans.questionId) === String(questionId)
     );
