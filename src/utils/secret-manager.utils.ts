@@ -1,5 +1,4 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import * as bcrypt from 'bcryptjs';
 import { CommonConstants } from '../modules/common/constants/common.constants';
 

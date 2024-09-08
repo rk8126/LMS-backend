@@ -43,29 +43,29 @@ export class TestSessionDbService {
 
   public async updateTestSession({
     testSessionId,
-    totalQuestionsAttempted,
     answers,
     currentDifficulty,
     consecutiveCorrectAnswers,
+    isTestCompleted,
   }: {
     testSessionId: string;
-    totalQuestionsAttempted: number;
-    answers: {
+    answers?: {
       questionId: Types.ObjectId;
       isCorrect: boolean;
       difficulty: number;
     }[];
-    currentDifficulty: number;
-    consecutiveCorrectAnswers: number;
+    currentDifficulty?: number;
+    consecutiveCorrectAnswers?: number;
+    isTestCompleted?: boolean;
   }): Promise<TestSession> {
     const testSession = await this.testSessionModel
       .findByIdAndUpdate(
         testSessionId,
         {
-          totalQuestionsAttempted,
-          answers,
-          currentDifficulty,
-          consecutiveCorrectAnswers,
+          ...(answers && { answers }),
+          ...(currentDifficulty && { currentDifficulty }),
+          ...(consecutiveCorrectAnswers && { consecutiveCorrectAnswers }),
+          ...(isTestCompleted && { isTestCompleted }),
         },
         { new: true }
       )

@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Types } from 'mongoose';
 import type { AnswerOption, Question } from 'src/database/models/question.model';
 import type { Test } from 'src/database/models/test.schema';
@@ -36,8 +36,21 @@ export class TestService {
       if (!test) {
         throw new NotFoundException('Test not found');
       }
+      if (new Date() > test.deadline) {
+        throw new BadRequestException('Test has been expired');
+      }
+      const testSession = await this.testSessionDbService.getTestSessionsByStudentAndTestId({
+        studentId,
+        testId,
+      });
+      if (testSession?.isTestCompleted) {
+        throw new BadRequestException('Test has already completed');
+      }
+      if (testSession) {
+        throw new BadRequestException('Test has already started');
+      }
       const currentDifficulty = 5;
-      const question = await this.questionDbService.getNextTestQuestion({
+      const question = await this.questionDbService.getTestQuestionByQuestionIdsAndDifficulty({
         questionIds: test.questionIds,
         currentDifficulty,
       });
@@ -46,7 +59,7 @@ export class TestService {
         studentId,
         currentDifficulty,
       });
-      return question;
+      return { ...question, correctAnswer: '' as AnswerOption } as Question;
     } catch (error) {
       this.logger.error(`Error starting test: ${JSON.stringify(error)}`);
       throw error;
@@ -77,16 +90,22 @@ export class TestService {
       throw new NotFoundException('Test session not found');
     }
 
+    const isAlreadySubmitted = testSession.answers?.some(
+      (ans) => String(ans.questionId) === String(questionId)
+    );
+    if (isAlreadySubmitted) {
+      throw new BadRequestException('Question already submitted');
+    }
+
     const answeredCorrectly = question.correctAnswer === answer;
 
     // Record the answer
-    testSession.answers.push({
+    const answers = testSession.answers || [];
+    answers.push({
       questionId: new Types.ObjectId(questionId),
       isCorrect: answeredCorrectly,
       difficulty: question.difficulty,
     });
-    const answers = testSession.answers;
-    const totalQuestionsAttempted = (testSession.totalQuestionsAttempted += 1);
 
     // Adjust difficulty based on the correctness of the answer
     const { currentDifficulty, consecutiveCorrectAnswers } = this.adjustDifficulty(
@@ -94,19 +113,26 @@ export class TestService {
       answeredCorrectly
     );
 
+    // Check if the test should end based on updated conditions
+    const shouldEndTest =
+      this.shouldEndStudentTest({
+        answersLength: answer.length,
+        questionDifficulty: question.difficulty,
+        consecutiveCorrectAnswers,
+        answeredCorrectly,
+      }) || testSession.answers?.length === testSession.testId?.questionIds?.length;
+
+    // Update the test session in the database
     await this.testSessionDbService.updateTestSession({
       testSessionId: testSession._id,
-      totalQuestionsAttempted,
       answers,
       currentDifficulty,
       consecutiveCorrectAnswers,
+      ...(shouldEndTest && { isTestCompleted: shouldEndTest }),
     });
 
-    // End the test if conditions are met
-    if (this.shouldEndTest(testSession)) {
-      return { endTest: true };
-    }
-    return { endTest: false };
+    // Return whether the test should end
+    return { endTest: shouldEndTest };
   }
 
   // Adjust the difficulty for the next question
@@ -116,38 +142,48 @@ export class TestService {
   ): { currentDifficulty: number; consecutiveCorrectAnswers: number } {
     const { currentDifficulty } = testSession;
 
+    let updatedDifficulty = testSession.currentDifficulty;
+    let updatedConsecutiveCorrectAnswers = testSession.consecutiveCorrectAnswers;
     if (answeredCorrectly) {
       // Increase difficulty if the answer was correct
-      testSession.currentDifficulty = Math.min(10, currentDifficulty + 1);
+      updatedDifficulty = Math.min(10, currentDifficulty + 1);
 
       // Track consecutive correct answers for difficulty 10
-      if (currentDifficulty === 10) {
-        testSession.consecutiveCorrectAnswers += 1;
+      if (updatedDifficulty === 10) {
+        updatedConsecutiveCorrectAnswers += 1;
       } else {
-        testSession.consecutiveCorrectAnswers = 0;
+        updatedConsecutiveCorrectAnswers = 0;
       }
     } else {
       // Decrease difficulty if the answer was incorrect
-      testSession.currentDifficulty = Math.max(1, currentDifficulty - 1);
-      testSession.consecutiveCorrectAnswers = 0; // Reset streak
+      updatedDifficulty = Math.max(1, currentDifficulty - 1);
+      updatedConsecutiveCorrectAnswers = 0; // Reset streak
     }
     return {
-      currentDifficulty: testSession.currentDifficulty,
-      consecutiveCorrectAnswers: testSession.consecutiveCorrectAnswers,
+      currentDifficulty: updatedDifficulty,
+      consecutiveCorrectAnswers: updatedConsecutiveCorrectAnswers,
     };
   }
 
   // Check if the test should end based on conditions
-  private shouldEndTest(testSession: TestSession): boolean {
-    const { totalQuestionsAttempted, currentDifficulty, consecutiveCorrectAnswers } = testSession;
-
+  private shouldEndStudentTest({
+    answersLength,
+    questionDifficulty,
+    consecutiveCorrectAnswers,
+    answeredCorrectly,
+  }: {
+    answersLength: number;
+    questionDifficulty: number;
+    consecutiveCorrectAnswers: number;
+    answeredCorrectly: boolean;
+  }): boolean {
     // Condition 1: User has attempted 20 questions
-    if (totalQuestionsAttempted >= 20) {
+    if (answersLength >= 20) {
       return true;
     }
 
     // Condition 2: User has incorrectly answered a question of difficulty 1
-    if (currentDifficulty === 1 && testSession.answers.some((a) => !a.isCorrect)) {
+    if (questionDifficulty === 1 && !answeredCorrectly) {
       return true;
     }
 
@@ -168,22 +204,120 @@ export class TestService {
     studentId: string;
   }): Promise<Question | null> {
     try {
+      // Fetch the test session for the given student and test
       const testSession = await this.testSessionDbService.getTestSessionsByStudentAndTestId({
         studentId,
         testId,
       });
+
       if (!testSession) {
         throw new NotFoundException('Test session not found');
       }
-      const nextQuestion = await this.questionDbService.getNextTestQuestion({
-        questionIds: testSession.testId?.questionIds || [],
-        currentDifficulty: testSession.currentDifficulty,
+
+      if (testSession.isTestCompleted) {
+        throw new BadRequestException('Test has been completed');
+      }
+
+      if (testSession.answers?.length >= testSession.testId?.questionIds?.length) {
+        await this.testSessionDbService.updateTestSession({
+          testSessionId: testSession._id,
+          isTestCompleted: true,
+        });
+        throw new BadRequestException('Test has been completed');
+      }
+
+      // Exclude previously answered question IDs
+      const excludeQuestionIds = testSession.answers?.map((answer) => String(answer.questionId));
+      const questionIds = testSession.testId?.questionIds?.filter(
+        (id) => !excludeQuestionIds.includes(String(id))
+      );
+
+      if (!questionIds?.length) {
+        throw new NotFoundException('No more questions available');
+      }
+
+      const currentDifficulty = testSession.currentDifficulty;
+
+      // Try to find the next question
+      let nextQuestion = await this.questionDbService.getTestQuestionByQuestionIdsAndDifficulty({
+        questionIds,
+        currentDifficulty,
       });
 
-      return nextQuestion;
+      // If no question at the current difficulty, adjust difficulty and find a question
+      if (!nextQuestion) {
+        nextQuestion = await this.adjustDifficultyAndFindQuestion(
+          testSession,
+          questionIds,
+          currentDifficulty
+        );
+      }
+
+      if (!nextQuestion) {
+        throw new NotFoundException('Question not found');
+      }
+
+      // Return the next question with an empty 'correctAnswer' field
+      return { ...nextQuestion, correctAnswer: '' as AnswerOption };
     } catch (error) {
+      // Log the error and rethrow it
       this.logger.error(`Error while getting next question: ${JSON.stringify(error)}`);
       throw error;
     }
+  }
+
+  private async adjustDifficultyAndFindQuestion(
+    testSession: TestSession,
+    questionIds: Types.ObjectId[],
+    currentDifficulty: number
+  ): Promise<Question | null> {
+    // Fetch the last answer to determine if the previous answer was correct
+    const isLastSubmittedAnswerCorrect = testSession?.answers.pop()?.isCorrect;
+    const questions = await this.questionDbService.getQuestionsByIds(questionIds);
+
+    let increaseDifficulty = currentDifficulty;
+    let decreaseDifficulty = currentDifficulty;
+    let foundQuestion = false;
+    let nextQuestion: Question | null = null;
+
+    // Loop to adjust difficulty and find the next question
+    while (!foundQuestion) {
+      if (isLastSubmittedAnswerCorrect) {
+        // Gradually increase the difficulty to find a harder question
+        increaseDifficulty++;
+        // eslint-disable-next-line @typescript-eslint/no-loop-func
+        const question = questions?.find((ques) => ques.difficulty === increaseDifficulty);
+        if (question) {
+          nextQuestion = question;
+          foundQuestion = true;
+          break;
+        }
+      } else {
+        // Gradually decrease the difficulty to find an easier question
+        decreaseDifficulty--;
+        // eslint-disable-next-line @typescript-eslint/no-loop-func
+        const question = questions?.find((ques) => ques.difficulty === decreaseDifficulty);
+        if (question) {
+          nextQuestion = question;
+          foundQuestion = true;
+          break;
+        }
+      }
+
+      // If neither increasing nor decreasing difficulty finds a question, break the loop
+      if (increaseDifficulty > 10 || decreaseDifficulty < 1) {
+        const finalDifficulty = isLastSubmittedAnswerCorrect ? 1 : 10;
+        // eslint-disable-next-line @typescript-eslint/no-loop-func
+        const question = questions?.find((ques) => ques.difficulty === finalDifficulty);
+        if (question) {
+          nextQuestion = question;
+          foundQuestion = true;
+          break;
+        }
+        break;
+      }
+    }
+
+    return nextQuestion;
   }
 }

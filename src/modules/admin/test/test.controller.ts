@@ -4,7 +4,7 @@ import type { Test } from 'src/database/models/test.schema';
 import { CreateTestDTO } from './dto/test.dto';
 import { AdminJwtAuthGuard } from 'src/modules/auth/guards/admin-jwt-auth.guard';
 
-@Controller('tests')
+@Controller('admin/tests')
 @UseGuards(AdminJwtAuthGuard)
 export class TestController {
   public constructor(private readonly testService: TestService) {}
@@ -24,22 +24,4 @@ export class TestController {
     const testDetails = await this.testService.getTestById(testId);
     return { message: 'Test Details retrieved successfully', data: testDetails };
   }
-
-  // @Post(':testId/start')
-  // public async startTest(
-  //   @Param('testId') testId: string,
-  //   @Body('userId') userId: string
-  // ) {
-  //   return this.testService.startTest(testId, userId);
-  // }
-
-  // @Post(':testId/questions/:questionId/answer')
-  // public async submitAnswer(
-  //   @Param('testId') testId: string,
-  //   @Param('questionId') questionId: string,
-  //   @Body('userId') userId: string,
-  //   @Body() answerDto: AnswerQuestionDTO
-  // ) {
-  //   return this.testService.submitAnswer(testId, questionId, userId, answerDto);
-  // }
 }

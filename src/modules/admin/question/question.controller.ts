@@ -4,7 +4,7 @@ import { AdminJwtAuthGuard } from '../../auth/guards/admin-jwt-auth.guard';
 import { CreateQuestionDTO, UpdateQuestionDTO } from './dto/question.dto';
 import type { Question } from 'src/database/models/question.model';
 
-@Controller('questions')
+@Controller('admin/questions')
 @UseGuards(AdminJwtAuthGuard) // Guard for Admin only access
 export class QuestionController {
   public constructor(private readonly questionService: QuestionService) {}

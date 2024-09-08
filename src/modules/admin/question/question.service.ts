@@ -11,7 +11,6 @@ export class QuestionService {
 
   public async createQuestion(createQuestionDto: CreateQuestionDTO): Promise<Question> {
     try {
-      console.log(createQuestionDto);
       const newQuestion = await this.questionDbService.createQuestion(createQuestionDto);
       return newQuestion;
     } catch (error) {

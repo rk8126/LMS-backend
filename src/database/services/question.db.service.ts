@@ -50,7 +50,7 @@ export class QuestionDbService {
     return this.questionModel.findByIdAndDelete(id);
   }
 
-  public async getNextTestQuestion({
+  public async getTestQuestionByQuestionIdsAndDifficulty({
     questionIds,
     currentDifficulty,
   }: {
@@ -64,5 +64,29 @@ export class QuestionDbService {
       })
       .lean();
     return nextQuestion;
+  }
+
+  public async getNextTestQuestions({
+    questionIds,
+    difficulties,
+  }: {
+    questionIds: Types.ObjectId[];
+    difficulties: number[];
+  }): Promise<Question[]> {
+    const nextQuestion = await this.questionModel
+      .find({
+        _id: { $in: questionIds },
+        difficulty: { $in: difficulties },
+      })
+      .sort({ difficulty: 1 })
+      .lean();
+    return nextQuestion;
+  }
+
+  public async getQuestionsByIds(questionIds: Types.ObjectId[]): Promise<Question[]> {
+    return this.questionModel
+      .find({ _id: { $in: questionIds } })
+      .sort({ createdAt: -1 })
+      .lean();
   }
 }

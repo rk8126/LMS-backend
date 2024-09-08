@@ -11,9 +11,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { DatabaseModule } from './database/database.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { UserIdMiddleware } from './middlewares/user.id.middleware';
-import { QuestionModule } from './modules/admin/question/question.module';
+import { AdminQuestionModule } from './modules/admin/question/question.module';
 import { StudentModule } from './modules/student/student.module';
 import { TestModule } from './modules/student/test/test.module';
+import { AdminTestModule } from './modules/admin/test/test.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }), // Loading environment variables globally
@@ -31,7 +32,8 @@ import { TestModule } from './modules/student/test/test.module';
     AuthModule,
     DatabaseModule,
     AdminModule,
-    QuestionModule,
+    AdminTestModule,
+    AdminQuestionModule,
     StudentModule,
     TestModule,
   ],

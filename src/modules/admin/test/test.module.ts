@@ -8,4 +8,4 @@ import { DatabaseModule } from 'src/database/database.module';
   controllers: [TestController],
   providers: [TestService],
 })
-export class TestModule {}
+export class AdminTestModule {}

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsArray, IsDateString } from 'class-validator';
+import { IsNotEmpty, IsString, IsArray, IsDateString, ArrayMinSize } from 'class-validator';
 import type { Types } from 'mongoose';
 
 export class CreateTestDTO {
@@ -12,6 +12,7 @@ export class CreateTestDTO {
 
   @IsArray()
   @IsNotEmpty()
+  @ArrayMinSize(10)
   public questionIds: Types.ObjectId[]; // Array of question IDs (ObjectId)
 
   @IsNotEmpty()

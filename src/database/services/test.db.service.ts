@@ -13,7 +13,6 @@ export class TestDbService {
 
   // Create a new test
   public async createTest(createTestDto: CreateTestDTO): Promise<Test> {
-    console.log('test is here', createTestDto);
     const test = await this.testModel.create(createTestDto);
     return test.toObject();
   }

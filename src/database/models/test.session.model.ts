@@ -18,20 +18,21 @@ export class TestSession {
         questionId: { type: Types.ObjectId, ref: 'Question', required: true },
         isCorrect: { type: Boolean, required: true },
         difficulty: { type: Number, required: true },
+        _id: false,
       },
     ],
     required: true,
   })
   public answers: Array<{ questionId: Types.ObjectId; isCorrect: boolean; difficulty: number }>; // Array of answers with correctness
 
-  @Prop({ type: Number, required: true, default: 5 })
+  @Prop({ type: Number, required: true, default: 0 })
   public currentDifficulty: number; // Track the current difficulty level
 
   @Prop({ type: Number, required: true, default: 0 })
   public consecutiveCorrectAnswers: number; // Track consecutive correct answers of difficulty 10
 
-  @Prop({ type: Number, required: true, default: 0 })
-  public totalQuestionsAttempted: number; // Track the total questions attempted
+  @Prop({ type: Boolean, required: true, default: false })
+  public isTestCompleted: boolean; // Track the total questions attempted
 }
 
 export const TestSessionSchema = SchemaFactory.createForClass(TestSession);
