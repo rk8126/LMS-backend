@@ -32,7 +32,6 @@ export class AuthService {
     email: string;
     secret: string;
   }): Promise<User | AdminUser | null> {
-    console.log({ userType, email, secret });
     let user: User | AdminUser | null = null;
 
     if (!userType || !email || !secret) {
@@ -114,7 +113,6 @@ export class AuthService {
 
     const token = this.jwtService.sign(payload);
 
-    console.log(payload, token);
     return {
       accessToken: token,
     };

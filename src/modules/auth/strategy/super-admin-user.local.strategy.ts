@@ -19,7 +19,6 @@ export class SuperAdminUserLocalStrategy extends PassportStrategy(Strategy, 'sup
 
   public async validate(email: string, secret: string): Promise<AdminUser> {
     try {
-      console.log({ email, secret });
       const user = await this.authService.validateSuperAdminUser({
         email,
         secret,

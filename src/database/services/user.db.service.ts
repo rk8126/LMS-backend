@@ -32,7 +32,6 @@ export class UserDbService {
    */
   public async findUserByEmail(email: string): Promise<User | null> {
     const result = await this.userModel.findOne({ email }).lean();
-    console.log({ resultIsHere: result });
     return result;
   }
 

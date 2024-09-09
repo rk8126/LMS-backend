@@ -44,7 +44,6 @@ export class QuestionService {
 
   public async updateQuestion(id: string, updateQuestionDto: UpdateQuestionDTO): Promise<Question> {
     try {
-      console.log('update is jere', updateQuestionDto);
       const updatedQuestion = await this.questionDbService.updateQuestion({
         questionId: id,
         questionDetails: updateQuestionDto,

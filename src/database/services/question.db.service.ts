@@ -86,7 +86,7 @@ export class QuestionDbService {
   public async getQuestionsByIds(questionIds: Types.ObjectId[]): Promise<Question[]> {
     return this.questionModel
       .find({ _id: { $in: questionIds } })
-      .sort({ createdAt: -1 })
+      .sort({ difficulty: 1 })
       .lean();
   }
 }

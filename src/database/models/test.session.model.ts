@@ -28,9 +28,6 @@ export class TestSession {
   @Prop({ type: Number, required: true, default: 0 })
   public currentDifficulty: number; // Track the current difficulty level
 
-  @Prop({ type: Number, required: true, default: 0 })
-  public consecutiveCorrectAnswers: number; // Track consecutive correct answers of difficulty 10
-
   @Prop({ type: Boolean, required: true, default: false })
   public isTestCompleted: boolean; // Track the total questions attempted
 }

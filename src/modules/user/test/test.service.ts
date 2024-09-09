@@ -6,6 +6,7 @@ import type { TestSession } from 'src/database/models/test.session.model';
 import { QuestionDbService } from 'src/database/services/question.db.service';
 import { TestDbService } from 'src/database/services/test.db.service';
 import { TestSessionDbService } from 'src/database/services/test.session.db.service';
+import { CommonConstants } from 'src/modules/common/constants/common.constants';
 
 @Injectable()
 export class TestService {
@@ -49,7 +50,8 @@ export class TestService {
         throw new BadRequestException('Test has already been completed');
       }
       if (testSession) {
-        throw new BadRequestException('Test has already started');
+        const question = await this.getNextQuestion({ testId, userId });
+        return { ...question, correctAnswer: '' as AnswerOption } as Question;
       }
       const currentDifficulty = 5;
       const question = await this.questionDbService.getTestQuestionByQuestionIdsAndDifficulty({
@@ -112,17 +114,13 @@ export class TestService {
     });
 
     // Adjust difficulty based on the correctness of the answer
-    const { currentDifficulty, consecutiveCorrectAnswers } = this.adjustDifficulty(
-      testSession,
-      answeredCorrectly
-    );
+    const { currentDifficulty } = this.adjustDifficulty(testSession, answeredCorrectly);
 
     // Check if the test should end based on updated conditions
     const shouldEndTest =
       this.shouldEndUserTest({
-        answersLength: answer.length,
+        answers: testSession.answers,
         questionDifficulty: question.difficulty,
-        consecutiveCorrectAnswers,
         answeredCorrectly,
       }) || testSession.answers?.length === testSession.testId?.questionIds?.length;
 
@@ -131,7 +129,6 @@ export class TestService {
       testSessionId: testSession._id,
       answers,
       currentDifficulty,
-      consecutiveCorrectAnswers,
       ...(shouldEndTest && { isTestCompleted: shouldEndTest }),
     });
 
@@ -143,46 +140,38 @@ export class TestService {
   private adjustDifficulty(
     testSession: TestSession,
     answeredCorrectly: boolean
-  ): { currentDifficulty: number; consecutiveCorrectAnswers: number } {
+  ): { currentDifficulty: number } {
     const { currentDifficulty } = testSession;
 
     let updatedDifficulty = testSession.currentDifficulty;
-    let updatedConsecutiveCorrectAnswers = testSession.consecutiveCorrectAnswers;
     if (answeredCorrectly) {
       // Increase difficulty if the answer was correct
       updatedDifficulty = Math.min(10, currentDifficulty + 1);
-
-      // Track consecutive correct answers for difficulty 10
-      if (updatedDifficulty === 10) {
-        updatedConsecutiveCorrectAnswers += 1;
-      } else {
-        updatedConsecutiveCorrectAnswers = 0;
-      }
     } else {
       // Decrease difficulty if the answer was incorrect
       updatedDifficulty = Math.max(1, currentDifficulty - 1);
-      updatedConsecutiveCorrectAnswers = 0; // Reset streak
     }
     return {
       currentDifficulty: updatedDifficulty,
-      consecutiveCorrectAnswers: updatedConsecutiveCorrectAnswers,
     };
   }
 
   // Check if the test should end based on conditions
   private shouldEndUserTest({
-    answersLength,
+    answers,
     questionDifficulty,
-    consecutiveCorrectAnswers,
     answeredCorrectly,
   }: {
-    answersLength: number;
+    answers: {
+      questionId: Types.ObjectId;
+      isCorrect: boolean;
+      difficulty: number;
+    }[];
     questionDifficulty: number;
-    consecutiveCorrectAnswers: number;
     answeredCorrectly: boolean;
   }): boolean {
     // Condition 1: User has attempted 20 questions
-    if (answersLength >= 20) {
+    if (answers.length >= 20) {
       return true;
     }
 
@@ -191,8 +180,9 @@ export class TestService {
       return true;
     }
 
+    const lastThreeAnswers = answers.slice(-3);
     // Condition 3: User has correctly answered 3 consecutive questions of difficulty 10
-    if (consecutiveCorrectAnswers >= 3) {
+    if (lastThreeAnswers.length >= 3 && lastThreeAnswers.every((e) => e.difficulty === 10)) {
       return true;
     }
 
@@ -285,6 +275,11 @@ export class TestService {
     let nextQuestion: Question | null = null;
 
     // Loop to adjust difficulty and find the next question
+    const allDifficultyLevels: { [key: number]: number } = {};
+    CommonConstants.QUESTION_DIFFICULTIES.forEach(
+      (difficulty) => (allDifficultyLevels[difficulty] = difficulty)
+    );
+
     while (!foundQuestion) {
       if (isLastSubmittedAnswerCorrect) {
         // Gradually increase the difficulty to find a harder question
@@ -296,6 +291,7 @@ export class TestService {
           foundQuestion = true;
           break;
         }
+        delete allDifficultyLevels[increaseDifficulty];
       } else {
         // Gradually decrease the difficulty to find an easier question
         decreaseDifficulty--;
@@ -306,13 +302,18 @@ export class TestService {
           foundQuestion = true;
           break;
         }
+        delete allDifficultyLevels[decreaseDifficulty];
       }
 
       // If neither increasing nor decreasing difficulty finds a question, break the loop
       if (increaseDifficulty > 10 || decreaseDifficulty < 1) {
-        const finalDifficulty = isLastSubmittedAnswerCorrect ? 1 : 10;
+        const finalDifficultyList = isLastSubmittedAnswerCorrect
+          ? Object.values(allDifficultyLevels).sort((a, b) => b - a)
+          : Object.values(allDifficultyLevels).sort((a, b) => a - b);
         // eslint-disable-next-line @typescript-eslint/no-loop-func
-        const question = questions?.find((ques) => ques.difficulty === finalDifficulty);
+        const question = questions?.find((ques) =>
+          finalDifficultyList.some((d) => d === ques.difficulty)
+        );
         if (question) {
           nextQuestion = question;
           foundQuestion = true;

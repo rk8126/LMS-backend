@@ -31,9 +31,11 @@ export class AuthController {
   @HttpCode(200)
   public async userLogin(
     @Request() req: { user: CommonTypes.ValidationPayload }
-  ): Promise<CommonTypes.IUser> {
+  ): Promise<{ message: string; data: { accessToken: string } }> {
+    const data = await this.authService.signJwtForUser(req.user);
     return {
-      accessToken: (await this.authService.signJwtForUser(req.user)).accessToken,
+      message: 'User logged in successfully',
+      data: { accessToken: data.accessToken },
     };
   }
 
@@ -47,8 +49,12 @@ export class AuthController {
   @HttpCode(200)
   public async adminUserLogin(
     @Request() req: { user: CommonTypes.ValidationPayload }
-  ): Promise<CommonTypes.IAdminUser> {
-    return this.authService.signJwtForAdminUser(req.user);
+  ): Promise<{ message: string; data: { accessToken: string } }> {
+    const data = await this.authService.signJwtForAdminUser(req.user);
+    return {
+      message: 'User logged in successfully',
+      data: { accessToken: data.accessToken },
+    };
   }
 
   /**

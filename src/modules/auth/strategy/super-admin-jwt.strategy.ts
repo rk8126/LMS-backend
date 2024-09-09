@@ -33,12 +33,10 @@ export class SuperAdminJwtStrategy extends PassportStrategy(Strategy, 'super-adm
   > {
     const { email } = payload;
     try {
-      console.log({ email, file: 'Test' });
       if (!payload._id) {
         throw new UnauthorizedException();
       }
       const adminUser = await this.adminDbService.findAdminUserById(payload._id);
-      console.log({ adminUser });
       if (!adminUser || adminUser.email !== email || !adminUser.isSuperAdmin) {
         throw new UnauthorizedException();
       }

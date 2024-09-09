@@ -33,7 +33,6 @@ export class UserService {
         email: user.email,
         fullName: user.fullName,
       };
-      // console.log('payload is here', payload, this.jwtService.sign(payload));
       return {
         accessToken: this.jwtService.sign(payload, { secret: process.env.JWT_SECRET }),
         user: { ...user, secret: '' },

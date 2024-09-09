@@ -45,7 +45,6 @@ export class TestSessionDbService {
     testSessionId,
     answers,
     currentDifficulty,
-    consecutiveCorrectAnswers,
     isTestCompleted,
   }: {
     testSessionId: string;
@@ -55,7 +54,6 @@ export class TestSessionDbService {
       difficulty: number;
     }[];
     currentDifficulty?: number;
-    consecutiveCorrectAnswers?: number;
     isTestCompleted?: boolean;
   }): Promise<TestSession> {
     const testSession = await this.testSessionModel
@@ -64,7 +62,6 @@ export class TestSessionDbService {
         {
           ...(answers && { answers }),
           ...(currentDifficulty && { currentDifficulty }),
-          ...(consecutiveCorrectAnswers && { consecutiveCorrectAnswers }),
           ...(isTestCompleted && { isTestCompleted }),
         },
         { new: true }
