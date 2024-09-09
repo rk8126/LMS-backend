@@ -10,11 +10,11 @@ import { SubmitTestQuestionDTO } from './dto/test.dto';
 export class TestController {
   public constructor(private readonly testService: TestService) {}
 
-  @Get('/:uniqueURL')
+  @Get('/:uniqueUrlId')
   public async getTestByUniqueUrl(
-    @Param('uniqueURL') uniqueUrl: string
+    @Param('uniqueUrlId') uniqueUrlId: string
   ): Promise<{ message: string; data: Test }> {
-    const data = await this.testService.getTestByUniqueUrl(uniqueUrl);
+    const data = await this.testService.getTestByUniqueUrl(uniqueUrlId);
     return { message: 'Test retrieved successfully', data };
   }
 

@@ -18,17 +18,17 @@ export class TestService {
     private testDbService: TestDbService
   ) {}
 
-  public async getTestByUniqueUrl(uniqueUrl: string): Promise<Test> {
+  public async getTestByUniqueUrl(uniqueUrlId: string): Promise<Test> {
     try {
       const test = await this.testDbService.getTestByUniqueUrl({
-        uniqueUrl: `${process.env.FRONTEND_BASE_URL}/tests/${uniqueUrl}`,
+        uniqueUrl: `${process.env.FRONTEND_BASE_URL}/tests/${uniqueUrlId}`,
       });
       if (!test) {
         throw new NotFoundException('Test not found');
       }
       return test;
     } catch (error) {
-      this.logger.error(`Error fetching test details by uniqueUrl: ${JSON.stringify(error)}`);
+      this.logger.error(`Error fetching test details by uniqueUrlId: ${JSON.stringify(error)}`);
       throw error;
     }
   }
