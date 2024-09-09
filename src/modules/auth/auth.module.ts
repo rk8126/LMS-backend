@@ -5,8 +5,8 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuthConstants } from '../common/constants/auth.constants';
-import { StudentJwtStrategy } from './strategy/student-jwt.strategy';
-import { StudentLocalStrategy } from './strategy/student.local.strategy';
+import { UserJwtStrategy } from './strategy/user-jwt.strategy';
+import { UserLocalStrategy } from './strategy/user.local.strategy';
 import { AdminUserLocalStrategy } from './strategy/admin-user.local.strategy';
 import { AdminJwtStrategy } from './strategy/admin-jwt.strategy';
 import { SuperAdminJwtStrategy } from './strategy/super-admin-jwt.strategy';
@@ -14,6 +14,7 @@ import { SuperAdminUserLocalStrategy } from './strategy/super-admin-user.local.s
 import { PreLoginStrategy } from './strategy/pre-login.strategy';
 import { SecretManager } from 'src/utils/secret-manager.utils';
 import { DatabaseModule } from 'src/database/database.module';
+import { UserService } from '../user/user.service';
 
 @Module({
   imports: [
@@ -36,12 +37,13 @@ import { DatabaseModule } from 'src/database/database.module';
     AuthService,
     AdminUserLocalStrategy,
     AdminJwtStrategy,
-    StudentJwtStrategy,
-    StudentLocalStrategy,
+    UserJwtStrategy,
+    UserLocalStrategy,
     SuperAdminJwtStrategy,
     SuperAdminUserLocalStrategy,
     PreLoginStrategy,
     SecretManager,
+    UserService,
   ],
   exports: [AuthService],
 })

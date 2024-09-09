@@ -3,19 +3,19 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import type { CommonTypes } from '../../../types/common.types';
-import { StudentDbService } from 'src/database/services/student.db.service';
+import { UserDbService } from 'src/database/services/user.db.service';
 
 /**
  * This strategy is applicable after the user is logged-in or the token is validated
  * So this validates the JWT token itself
  */
 @Injectable()
-export class StudentJwtStrategy extends PassportStrategy(Strategy, 'student-jwt') {
+export class UserJwtStrategy extends PassportStrategy(Strategy, 'user-jwt') {
   private logger: Logger;
 
   public constructor(
     private readonly configService: ConfigService,
-    private readonly studentDbService: StudentDbService
+    private readonly userDbService: UserDbService
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -23,7 +23,7 @@ export class StudentJwtStrategy extends PassportStrategy(Strategy, 'student-jwt'
       secretOrKey: configService.get<string>('JWT_SECRET'),
     });
 
-    this.logger = new Logger(StudentJwtStrategy.name);
+    this.logger = new Logger(UserJwtStrategy.name);
   }
 
   public async validate(payload: CommonTypes.ValidationPayload): Promise<{
@@ -39,8 +39,8 @@ export class StudentJwtStrategy extends PassportStrategy(Strategy, 'student-jwt'
         throw new UnauthorizedException();
       }
 
-      const student = await this.studentDbService.findStudentById(payload._id);
-      if (!student || student.email !== email) {
+      const user = await this.userDbService.findUserById(payload._id);
+      if (!user || user.email !== email) {
         throw new UnauthorizedException();
       }
 
@@ -50,7 +50,7 @@ export class StudentJwtStrategy extends PassportStrategy(Strategy, 'student-jwt'
         fullName,
       };
     } catch (error) {
-      this.logger.error('Error validating student', error);
+      this.logger.error('Error validating user', error);
       throw new UnauthorizedException();
     }
   }

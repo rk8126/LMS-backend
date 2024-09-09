@@ -3,13 +3,13 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import { AuthService } from '../auth.service';
 import { UserType } from '../../common/entity/user-type';
-import type { Student } from 'src/database/models/student.model';
+import type { User } from 'src/database/models/user.model';
 
 /**
  * Implements passport-local strategy for user/secret authentication
  */
 @Injectable()
-export class StudentLocalStrategy extends PassportStrategy(Strategy, 'student') {
+export class UserLocalStrategy extends PassportStrategy(Strategy, 'user') {
   public constructor(private authService: AuthService) {
     super({
       usernameField: 'email',
@@ -17,18 +17,18 @@ export class StudentLocalStrategy extends PassportStrategy(Strategy, 'student') 
     });
   }
 
-  public async validate(email: string, secret: string): Promise<Student> {
+  public async validate(email: string, secret: string): Promise<User> {
     try {
-      const student = await this.authService.validateUser({
+      const user = await this.authService.validateUser({
         userType: UserType.STUDENT,
         email,
         secret,
       });
 
-      if (!student) {
+      if (!user) {
         throw new UnauthorizedException();
       }
-      return student;
+      return user;
     } catch (error) {
       throw new UnauthorizedException();
     }

@@ -4,6 +4,9 @@ import type { CreateTestDTO } from './dto/test.dto';
 import { TestDbService } from 'src/database/services/test.db.service';
 import { QuestionDbService } from 'src/database/services/question.db.service';
 import { CommonConstants } from 'src/modules/common/constants/common.constants';
+import { TestSessionDbService } from 'src/database/services/test.session.db.service';
+import type { TestSession } from 'src/database/models/test.session.model';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class TestService {
@@ -11,15 +14,12 @@ export class TestService {
 
   public constructor(
     private readonly testDbService: TestDbService,
-    private readonly questionDbService: QuestionDbService
+    private readonly questionDbService: QuestionDbService,
+    private readonly testSessionDbService: TestSessionDbService
   ) {}
 
   public async createTest(createTestDto: CreateTestDTO): Promise<Test> {
     try {
-      const existingTest = await this.testDbService.getTestByUniqueUrl(createTestDto.uniqueURL);
-      if (existingTest) {
-        throw new BadRequestException('Test already exists with given url');
-      }
       // Fetch questions for the given questionIds
       const questions = await this.questionDbService.getQuestionsByIds(createTestDto.questionIds);
 
@@ -34,7 +34,10 @@ export class TestService {
       ) {
         throw new BadRequestException('Test must include questions from all difficulty levels');
       }
-      const test = await this.testDbService.createTest(createTestDto);
+      const test = await this.testDbService.createTest({
+        createTestDto,
+        uniqueUrl: `${process.env.FRONTEND_BASE_URL}/tests/${uuidv4()}`,
+      });
       return test;
     } catch (error) {
       this.logger.error(`Error creating test: ${JSON.stringify(error)}`);
@@ -42,28 +45,16 @@ export class TestService {
     }
   }
 
-  public async getTestById(id: string): Promise<Test> {
+  public async getTestById(id: string): Promise<Test & { testResults: TestSession[] }> {
     try {
       const test = await this.testDbService.getTestById(id);
       if (!test) {
         throw new NotFoundException('Test not found');
       }
-      return test;
+      const testResults = await this.testSessionDbService.getTestSessionsByTestId(id);
+      return { ...test, testResults };
     } catch (error) {
       this.logger.error(`Error fetching test details by id: ${JSON.stringify(error)}`);
-      throw error;
-    }
-  }
-
-  public async getTestByUniqueUrl(uniqueUrl: string): Promise<Test> {
-    try {
-      const test = await this.testDbService.getTestByUniqueUrl(uniqueUrl);
-      if (!test) {
-        throw new NotFoundException('Test not found');
-      }
-      return test;
-    } catch (error) {
-      this.logger.error(`Error fetching test details by uniqueUrl: ${JSON.stringify(error)}`);
       throw error;
     }
   }

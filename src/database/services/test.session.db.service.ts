@@ -13,30 +13,30 @@ export class TestSessionDbService {
   ) {}
 
   public async createTestSession({
-    studentId,
+    userId,
     testId,
     currentDifficulty,
   }: {
-    studentId: string;
+    userId: string;
     testId: string;
     currentDifficulty: number;
   }): Promise<TestSession> {
     return this.testSessionModel.create({
       testId,
-      studentId,
+      userId,
       currentDifficulty,
     });
   }
 
-  public async getTestSessionsByStudentAndTestId({
+  public async getTestSessionsByUserAndTestId({
     testId,
-    studentId,
+    userId,
   }: {
     testId: string;
-    studentId: string;
+    userId: string;
   }): Promise<(TestSession & { _id: string; testId: Test }) | null> {
     return this.testSessionModel
-      .findOne({ testId, studentId })
+      .findOne({ testId, userId })
       .populate('testId')
       .lean() as unknown as TestSession & { _id: string; testId: Test };
   }
@@ -71,5 +71,18 @@ export class TestSessionDbService {
       )
       .lean();
     return testSession as TestSession;
+  }
+
+  public async getTestSessionsByTestId(testId: string): Promise<TestSession[]> {
+    return this.testSessionModel
+      .find({ testId, isTestCompleted: true })
+      .populate({
+        path: 'userId', // Populate User details
+        select: 'fullName email', // You can specify the fields you want to populate (optional)
+      })
+      .populate({
+        path: 'answers.questionId', // Populate Question details inside the answers array
+      })
+      .lean();
   }
 }

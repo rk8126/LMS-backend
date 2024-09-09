@@ -19,7 +19,9 @@ export class TestService {
 
   public async getTestByUniqueUrl(uniqueUrl: string): Promise<Test> {
     try {
-      const test = await this.testDbService.getTestByUniqueUrl(uniqueUrl);
+      const test = await this.testDbService.getTestByUniqueUrl({
+        uniqueUrl: `${process.env.FRONTEND_BASE_URL}/tests/${uniqueUrl}`,
+      });
       if (!test) {
         throw new NotFoundException('Test not found');
       }
@@ -30,7 +32,7 @@ export class TestService {
     }
   }
 
-  public async startTest(testId: string, studentId: string): Promise<Question | null> {
+  public async startTest(testId: string, userId: string): Promise<Question | null> {
     try {
       const test = await this.testDbService.getTestById(testId);
       if (!test) {
@@ -39,8 +41,8 @@ export class TestService {
       if (new Date() > test.deadline) {
         throw new BadRequestException('Test has been expired');
       }
-      const testSession = await this.testSessionDbService.getTestSessionsByStudentAndTestId({
-        studentId,
+      const testSession = await this.testSessionDbService.getTestSessionsByUserAndTestId({
+        userId,
         testId,
       });
       if (testSession?.isTestCompleted) {
@@ -56,7 +58,7 @@ export class TestService {
       });
       await this.testSessionDbService.createTestSession({
         testId: testId,
-        studentId,
+        userId,
         currentDifficulty,
       });
       return { ...question, correctAnswer: '' as AnswerOption } as Question;
@@ -68,12 +70,12 @@ export class TestService {
 
   // Update the test session with the user's answer
   public async submitAnswer({
-    studentId,
+    userId,
     testId,
     questionId,
     answer,
   }: {
-    studentId: string;
+    userId: string;
     testId: string;
     questionId: string;
     answer: AnswerOption;
@@ -82,8 +84,8 @@ export class TestService {
     if (!question) {
       throw new NotFoundException('Question not found');
     }
-    const testSession = await this.testSessionDbService.getTestSessionsByStudentAndTestId({
-      studentId,
+    const testSession = await this.testSessionDbService.getTestSessionsByUserAndTestId({
+      userId,
       testId,
     });
     if (!testSession) {
@@ -117,7 +119,7 @@ export class TestService {
 
     // Check if the test should end based on updated conditions
     const shouldEndTest =
-      this.shouldEndStudentTest({
+      this.shouldEndUserTest({
         answersLength: answer.length,
         questionDifficulty: question.difficulty,
         consecutiveCorrectAnswers,
@@ -168,7 +170,7 @@ export class TestService {
   }
 
   // Check if the test should end based on conditions
-  private shouldEndStudentTest({
+  private shouldEndUserTest({
     answersLength,
     questionDifficulty,
     consecutiveCorrectAnswers,
@@ -200,15 +202,15 @@ export class TestService {
   // Start or continue a test session
   public async getNextQuestion({
     testId,
-    studentId,
+    userId,
   }: {
     testId: string;
-    studentId: string;
+    userId: string;
   }): Promise<Question | null> {
     try {
-      // Fetch the test session for the given student and test
-      const testSession = await this.testSessionDbService.getTestSessionsByStudentAndTestId({
-        studentId,
+      // Fetch the test session for the given user and test
+      const testSession = await this.testSessionDbService.getTestSessionsByUserAndTestId({
+        userId,
         testId,
       });
 

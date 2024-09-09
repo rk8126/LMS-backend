@@ -5,7 +5,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import { AuthService } from '../auth.service';
 import { UserType } from '../../common/entity/user-type';
-import type { Student } from 'src/database/models/student.model';
+import type { User } from 'src/database/models/user.model';
 
 /**
  * Implements passport-local strategy for user/secret authentication
@@ -23,9 +23,9 @@ export class PreLoginStrategy extends PassportStrategy(Strategy, 'pre-login') {
     this.logger = new Logger(PreLoginStrategy.name);
   }
 
-  public async validate(email: string, secret: string): Promise<Student | null> {
+  public async validate(email: string, secret: string): Promise<User | null> {
     try {
-      const user = await this.authService.preValidateStudent({
+      const user = await this.authService.preValidateUser({
         email,
         secret,
         userType: UserType.STUDENT,

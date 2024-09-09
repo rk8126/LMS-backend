@@ -12,9 +12,9 @@ import { DatabaseModule } from './database/database.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { UserIdMiddleware } from './middlewares/user.id.middleware';
 import { AdminQuestionModule } from './modules/admin/question/question.module';
-import { StudentModule } from './modules/student/student.module';
-import { TestModule } from './modules/student/test/test.module';
+import { UserModule } from './modules/user/user.module';
 import { AdminTestModule } from './modules/admin/test/test.module';
+import { TestModule } from './modules/user/test/test.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }), // Loading environment variables globally
@@ -34,7 +34,7 @@ import { AdminTestModule } from './modules/admin/test/test.module';
     AdminModule,
     AdminTestModule,
     AdminQuestionModule,
-    StudentModule,
+    UserModule,
     TestModule,
   ],
   controllers: [AppController],

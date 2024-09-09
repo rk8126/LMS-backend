@@ -9,8 +9,8 @@ export class TestSession {
   @Prop({ type: Types.ObjectId, ref: 'Test', required: true })
   public testId: Types.ObjectId; // Reference to the Test schema
 
-  @Prop({ type: Types.ObjectId, ref: 'Student', required: true })
-  public studentId: Types.ObjectId; // Reference to the Student schema
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  public userId: Types.ObjectId; // Reference to the User schema
 
   @Prop({
     type: [
@@ -38,4 +38,4 @@ export class TestSession {
 export const TestSessionSchema = SchemaFactory.createForClass(TestSession);
 
 // Add a unique index to enforce the constraint
-TestSessionSchema.index({ studentId: 1, testId: 1 }, { unique: true });
+TestSessionSchema.index({ userId: 1, testId: 1 }, { unique: true });

@@ -2,10 +2,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import type { Document } from 'mongoose';
 import { CommonConstants } from 'src/modules/common/constants/common.constants';
 
-export type StudentDocument = Student & Document;
+export type UserDocument = User & Document;
 
 @Schema({ timestamps: true })
-export class Student {
+export class User {
   @Prop({ type: String, required: true, trim: true })
   public fullName: string;
 
@@ -24,4 +24,4 @@ export class Student {
   public secret: string;
 }
 
-export const StudentSchema = SchemaFactory.createForClass(Student);
+export const UserSchema = SchemaFactory.createForClass(User);

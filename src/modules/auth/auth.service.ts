@@ -3,16 +3,16 @@ import { JwtService } from '@nestjs/jwt';
 import { UserType } from '../common/entity/user-type';
 import { SecretManager } from 'src/utils/secret-manager.utils';
 import type { AdminUser } from 'src/database/models/admin.user.model';
-import type { Student } from 'src/database/models/student.model';
+import type { User } from 'src/database/models/user.model';
 import type { CommonTypes } from 'src/types/common.types';
 import { AdminDbService } from 'src/database/services/admin.db.service';
-import { StudentDbService } from 'src/database/services/student.db.service';
+import { UserDbService } from 'src/database/services/user.db.service';
 @Injectable()
 export class AuthService {
   public constructor(
     private readonly jwtService: JwtService,
     private secretManager: SecretManager,
-    private studentDbService: StudentDbService,
+    private userDbService: UserDbService,
     private adminDbService: AdminDbService
   ) {}
 
@@ -31,15 +31,15 @@ export class AuthService {
     userType: UserType;
     email: string;
     secret: string;
-  }): Promise<Student | AdminUser | null> {
+  }): Promise<User | AdminUser | null> {
     console.log({ userType, email, secret });
-    let user: Student | AdminUser | null = null;
+    let user: User | AdminUser | null = null;
 
     if (!userType || !email || !secret) {
       return null;
     }
     if (userType === UserType.STUDENT) {
-      user = await this.studentDbService.findStudentByEmail(email);
+      user = await this.userDbService.findUserByEmail(email);
     }
     if (userType === UserType.ADMIN_USER) {
       user = await this.adminDbService.findAdminUserByEmail(email);
@@ -56,7 +56,7 @@ export class AuthService {
    * @param param0
    * @returns
    */
-  public async preValidateStudent({
+  public async preValidateUser({
     userType,
     email,
     secret,
@@ -64,11 +64,11 @@ export class AuthService {
     userType: UserType;
     email?: string;
     secret?: string;
-  }): Promise<Student | null> {
-    let user: Student | null = null;
+  }): Promise<User | null> {
+    let user: User | null = null;
 
     if (email && secret && userType === UserType.STUDENT) {
-      user = await this.studentDbService.findStudentByEmail(email);
+      user = await this.userDbService.findUserByEmail(email);
 
       const match = user && (await this.secretManager.compareSecret(secret, user.secret));
       if (user && match) {
@@ -105,13 +105,11 @@ export class AuthService {
    * @param user   User object
    * @returns  JWT object
    */
-  public async signJwtForStudent(
-    student: CommonTypes.ValidationPayload
-  ): Promise<CommonTypes.IStudent> {
+  public async signJwtForUser(user: CommonTypes.ValidationPayload): Promise<CommonTypes.IUser> {
     const payload = {
-      _id: student._id,
-      email: student.email,
-      fullName: student.fullName,
+      _id: user._id,
+      email: user.email,
+      fullName: user.fullName,
     };
 
     const token = this.jwtService.sign(payload);

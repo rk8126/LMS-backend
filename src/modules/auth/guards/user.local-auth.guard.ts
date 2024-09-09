@@ -5,4 +5,4 @@ import { AuthGuard } from '@nestjs/passport';
 /**
  * LocalAuthGuard to avoid magic strings in the code
  */
-export class StudentLocalAuthGuard extends AuthGuard('student') {}
+export class UserLocalAuthGuard extends AuthGuard('user') {}

@@ -9,7 +9,7 @@ export namespace CommonTypes {
     accessToken: string;
   };
 
-  export type IStudent = {
+  export type IUser = {
     accessToken: string;
   };
 

@@ -28,7 +28,7 @@ async function bootstrap(): Promise<void> {
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
-  const PORT = 3000;
+  const PORT = 4000;
   EventEmitter.defaultMaxListeners = 20;
 
   // Starts listening for shutdown hooks

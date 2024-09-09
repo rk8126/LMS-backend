@@ -12,13 +12,19 @@ export class TestDbService {
   ) {}
 
   // Create a new test
-  public async createTest(createTestDto: CreateTestDTO): Promise<Test> {
-    const test = await this.testModel.create(createTestDto);
+  public async createTest({
+    createTestDto,
+    uniqueUrl,
+  }: {
+    createTestDto: CreateTestDTO;
+    uniqueUrl: string;
+  }): Promise<Test> {
+    const test = await this.testModel.create({ ...createTestDto, uniqueURL: uniqueUrl });
     return test.toObject();
   }
 
   // Retrieve test details by unique URL
-  public async getTestByUniqueUrl(uniqueUrl: string): Promise<Test | null> {
+  public async getTestByUniqueUrl({ uniqueUrl }: { uniqueUrl: string }): Promise<Test | null> {
     return this.testModel.findOne({ uniqueURL: uniqueUrl }).lean();
   }
 

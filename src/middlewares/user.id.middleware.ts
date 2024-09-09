@@ -22,7 +22,7 @@ export class UserIdMiddleware implements NestMiddleware {
             req.headers['x-user-id'] = userId;
           }
         } catch (err) {
-          throw new UnauthorizedException();
+          //Ignoring invalid JWT and reverting to default tracking
         }
       }
     }
