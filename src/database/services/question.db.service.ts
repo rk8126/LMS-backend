@@ -21,7 +21,8 @@ export class QuestionDbService {
   }
 
   public async getAllQuestions(): Promise<Question[]> {
-    return this.questionModel.find().sort({ createdAt: -1 }).lean();
+    // For now fetching 100 questions we can paginate it
+    return this.questionModel.find().limit(100).sort({ createdAt: 1 }).lean();
   }
 
   public async getQuestionById(id: string): Promise<Question | null> {
