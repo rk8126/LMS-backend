@@ -11,7 +11,6 @@ import { AdminUserLocalStrategy } from './strategy/admin-user.local.strategy';
 import { AdminJwtStrategy } from './strategy/admin-jwt.strategy';
 import { SuperAdminJwtStrategy } from './strategy/super-admin-jwt.strategy';
 import { SuperAdminUserLocalStrategy } from './strategy/super-admin-user.local.strategy';
-import { PreLoginStrategy } from './strategy/pre-login.strategy';
 import { SecretManager } from 'src/utils/secret-manager.utils';
 import { DatabaseModule } from 'src/database/database.module';
 import { UserService } from '../user/user.service';
@@ -41,7 +40,6 @@ import { UserService } from '../user/user.service';
     UserLocalStrategy,
     SuperAdminJwtStrategy,
     SuperAdminUserLocalStrategy,
-    PreLoginStrategy,
     SecretManager,
     UserService,
   ],
