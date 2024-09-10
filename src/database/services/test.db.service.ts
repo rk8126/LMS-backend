@@ -35,4 +35,9 @@ export class TestDbService {
       questionIds: Question[];
     };
   }
+
+  // Retrieve all tests
+  public async getTests(): Promise<Test[]> {
+    return this.testModel.find().lean();
+  }
 }

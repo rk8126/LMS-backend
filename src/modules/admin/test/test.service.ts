@@ -58,4 +58,14 @@ export class TestService {
       throw error;
     }
   }
+
+  public async getTests(): Promise<Test[]> {
+    try {
+      const tests = await this.testDbService.getTests();
+      return tests;
+    } catch (error) {
+      this.logger.error(`Error fetching tests: ${JSON.stringify(error)}`);
+      throw error;
+    }
+  }
 }

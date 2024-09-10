@@ -17,6 +17,12 @@ export class TestController {
     return { message: 'Test retrieved successfully', data };
   }
 
+  @Get()
+  public async getTests(): Promise<{ message: string; data: Test[] }> {
+    const tests = await this.testService.getTests();
+    return { message: 'Test Details retrieved successfully', data: tests };
+  }
+
   @Get('/:testId')
   public async getTestById(
     @Param('testId') testId: string
