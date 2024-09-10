@@ -55,7 +55,7 @@ export class TestService {
       }
       const currentDifficulty = 5;
       const question = await this.questionDbService.getTestQuestionByQuestionIdsAndDifficulty({
-        questionIds: test.questionIds,
+        questionIds: test.questionIds.map((que) => que._id),
         currentDifficulty,
       });
       await this.testSessionDbService.createTestSession({

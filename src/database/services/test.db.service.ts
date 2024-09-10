@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Test } from '../models/test.schema';
 import type { CreateTestDTO } from 'src/modules/admin/test/dto/test.dto';
+import type { Question } from '../models/question.model';
 
 @Injectable()
 export class TestDbService {
@@ -29,7 +30,9 @@ export class TestDbService {
   }
 
   // Retrieve test details by id
-  public async getTestById(id: string): Promise<Test | null> {
-    return this.testModel.findById(id).lean();
+  public async getTestById(id: string): Promise<(Test & { questionIds: Question[] }) | null> {
+    return this.testModel.findById(id).populate('questionIds').lean() as unknown as Test & {
+      questionIds: Question[];
+    };
   }
 }

@@ -1,21 +1,21 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import type { Document } from 'mongoose';
-import { Types } from 'mongoose';
+import { SchemaTypes, Types } from 'mongoose';
 
 export type TestSessionDocument = TestSession & Document;
 
 @Schema({ timestamps: true })
 export class TestSession {
-  @Prop({ type: Types.ObjectId, ref: 'Test', required: true })
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'Test', required: true })
   public testId: Types.ObjectId; // Reference to the Test schema
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: true })
   public userId: Types.ObjectId; // Reference to the User schema
 
   @Prop({
     type: [
       {
-        questionId: { type: Types.ObjectId, ref: 'Question', required: true },
+        questionId: { type: SchemaTypes.ObjectId, ref: 'Question', required: true },
         isCorrect: { type: Boolean, required: true },
         difficulty: { type: Number, required: true },
         _id: false,

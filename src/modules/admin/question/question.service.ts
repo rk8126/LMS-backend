@@ -69,8 +69,4 @@ export class QuestionService {
       throw error;
     }
   }
-
-  // public async getTestById(testId: string): Promise<any> {
-  //   return this.questionDbService.getTestById(testId);
-  // }
 }
